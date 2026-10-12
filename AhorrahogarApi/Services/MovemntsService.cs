@@ -28,11 +28,12 @@ public class MovemntsService : IMovemntsService
         // DTO -> entidad
         var product = new Movemnts
         {
-            Hogar_Id = dto.HogarId,
-            Categoria_Id = dto.CategoriaId,
-            Tipo = dto.Tipo,
+            hogar_id = dto.HogarId,
+            categoria_id = dto.CategoriaId,
+            monto=dto.monto,
             Fecha = dto.Fecha,
             Nota = dto.Nota,
+            Creado_En = DateTime.Now
         };
 
         _context.movimientos.Add(product);
@@ -47,9 +48,8 @@ public class MovemntsService : IMovemntsService
         if (product is null) return false;
 
         
-        product.Hogar_Id = dto.HogarId;
-        product.Categoria_Id = dto.CategoriaId;
-        product.Tipo = dto.Tipo;
+        product.hogar_id = dto.HogarId;
+        product.categoria_id = dto.CategoriaId;
         product.Fecha = dto.Fecha;
         product.Nota=dto.Nota;
 
@@ -70,10 +70,10 @@ public class MovemntsService : IMovemntsService
     // Entidad -> DTO (un solo lugar para no repetir codigo)
     private static MovemntsDto ToDto(Movemnts p) => new()
     {
-        HogarId = p.Hogar_Id,
-        CategoriaId = p.Categoria_Id,
-        Tipo = p.Tipo,
+        categoria_id = p.categoria_id,
+        monto = p.monto,
         Fecha = p.Fecha,
         Nota = p.Nota,
+        creado_en = p.Creado_En
     };
 }

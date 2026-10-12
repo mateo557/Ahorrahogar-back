@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using AhorrahogarApi.DTOs;
 using AhorrahogarApi.Services;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AhorrahogarApi.Controllers;
 
@@ -26,8 +27,27 @@ public class MovemntsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<MovemntsDto>> Create(CreateMovemntsDto dto)
     {
+
         var created = await _service.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+
+        // Retorna HTTP 200 OK con el GetBalanceDTO resultante
+        return Ok(dto);
+
+        //try
+        //{
+
+          
+        //}
+        //catch (ArgumentException ex)
+        //{
+        //    // Si el monto es <= 0, retorna HTTP 400 Bad Request con el mensaje de error
+        //    return BadRequest(new { message = ex.Message });
+        //}
+        //catch (System.Exception ex)
+        //{
+        //    // Para cualquier otro error inesperado, retorna HTTP 500
+        //    return StatusCode(500, new { message = "Error interno del servidor", detail = ex.Message });
+        //}
     }
 
     [HttpPut("{id:int}")]

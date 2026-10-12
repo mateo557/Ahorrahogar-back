@@ -1,48 +1,39 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AhorrahogarApi.DTOs;
 
-/// <summary>Lo que devuelve la API.</summary>
+
 public class MovemntsDto
 {
-    public int Id { get; init; }
-    public int HogarId { get; init; }
-    public int CategoriaId { get; init; }
+   
 
-    [Required]
-    [StringLength(10)]
-    public string Tipo { get; init; } = string.Empty;
+    public int categoria_id { get; set; }
+   
+    public decimal monto { get; set; }
 
-    public decimal Monto { get; init; }
-
-    public DateOnly Fecha { get; init; }
+    public DateOnly Fecha { get; set; }
 
     [StringLength(200)]
-    public string? Nota { get; init; }
+    public string? Nota { get; set; }
 
-    public DateTime CreadoEn { get; init; }
+    public DateTime creado_en { get; set; }
 }
 
-/// <summary>Lo que recibe la API al crear.</summary>
+
 public class CreateMovemntsDto
 {
-    public int Id { get; init; }
-    public int HogarId { get; init; }
-    public int CategoriaId { get; init; }
+    public int HogarId { get; set; }
+    public int CategoriaId { get; set; }
 
-    [Required]
-    [StringLength(10)]
-    public string Tipo { get; init; } = string.Empty;
+    public decimal monto { get; set; }
 
-    public decimal Monto { get; init; }
-
-    public DateOnly Fecha { get; init; }
+    public DateOnly Fecha { get; set; }
 
     [StringLength(200)]
-    public string? Nota { get; init; }
+    public string? Nota { get; set; }
 
-    public DateTime CreadoEn { get; init; }
-}
+ }
 
-/// <summary>Lo que recibe la API al actualizar.</summary>
+
 public class UpdateMovemntsDto : CreateMovemntsDto { }
