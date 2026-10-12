@@ -10,6 +10,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Inyeccion de dependencias: interfaz -> implementacion
 builder.Services.AddScoped<IMovemntsService, MovemntsService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
