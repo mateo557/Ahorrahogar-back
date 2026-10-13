@@ -11,12 +11,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Inyeccion de dependencias: interfaz -> implementacion
 builder.Services.AddScoped<IMovemntsService, MovemntsService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<IGoalService, GoalService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
