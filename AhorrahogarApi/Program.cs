@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using AhorrahogarApi.Data;
 using AhorrahogarApi.Services;
+using MySqlConnector;
 
 var builder = WebApplication.CreateBuilder(args);
 

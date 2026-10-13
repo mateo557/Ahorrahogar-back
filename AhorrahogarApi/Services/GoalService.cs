@@ -54,10 +54,10 @@ namespace AhorrahogarApi.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var product = await _context.movimientos.FindAsync(id);
+            var product = await _context.metas.FindAsync(id);
             if (product is null) return false;
 
-            _context.movimientos.Remove(product);
+            _context.metas.Remove(product);
             await _context.SaveChangesAsync();
             return true;
         }
