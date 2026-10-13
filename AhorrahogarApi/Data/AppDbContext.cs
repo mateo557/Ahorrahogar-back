@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<Movemnts> movimientos => Set<Movemnts>();
 
     public DbSet<Members> integrantes => Set<Members>();
+    public DbSet<Goals> metas => Set<Goals>();
 
     //protected override void OnModelCreating(ModelBuilder modelBuilder)
     //{
