@@ -7,7 +7,7 @@ namespace AhorrahogarApi.Services
         Task<IEnumerable<GoalsDto>> GetAllAsync();
         Task<GoalsDto?> GetByIdAsync(int id);
         Task<GoalsDto> CreateAsync(CreateGoalsDto dto);
-        Task<bool> UpdateAsync(int id, CreateGoalsDto dto);
+        Task<bool> UpdateAsync(int id, UpdateGoalsDto dto);
         Task<bool> DeleteAsync(int id);
     }
 }

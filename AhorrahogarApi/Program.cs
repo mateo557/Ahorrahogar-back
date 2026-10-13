@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using AhorrahogarApi.Data;
 using AhorrahogarApi.Services;
+using MySqlConnector;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Inyeccion de dependencias: interfaz -> implementacion
 builder.Services.AddScoped<IMovemntsService, MovemntsService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<IGoalService,GoalService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
