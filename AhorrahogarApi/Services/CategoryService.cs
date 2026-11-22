@@ -2,7 +2,6 @@
 using AhorrahogarApi.DTOs;
 using AhorrahogarApi.Models;
 using Microsoft.EntityFrameworkCore;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AhorrahogarApi.Services
 {
