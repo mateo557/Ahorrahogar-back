@@ -8,9 +8,10 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Movemnts> movimientos => Set<Movemnts>();
-
+    public DbSet<Categorys> categorias => Set<Categorys>();
     public DbSet<Members> integrantes => Set<Members>();
     public DbSet<Goals> metas => Set<Goals>();
+    public DbSet<Balance> balances => Set<Balance>();
 
     //protected override void OnModelCreating(ModelBuilder modelBuilder)
     //{
