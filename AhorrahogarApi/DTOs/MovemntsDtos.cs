@@ -6,8 +6,8 @@ namespace AhorrahogarApi.DTOs;
 
 public class MovemntsDto
 {
-   
 
+    public int Id { get; set; }
     public int categoria_id { get; set; }
    
     public decimal monto { get; set; }

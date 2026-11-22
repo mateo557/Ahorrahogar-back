@@ -70,6 +70,7 @@ public class MovemntsService : IMovemntsService
     // Entidad -> DTO (un solo lugar para no repetir codigo)
     private static MovemntsDto ToDto(Movemnts p) => new()
     {
+        Id=p.Id,
         categoria_id = p.categoria_id,
         monto = p.monto,
         Fecha = p.Fecha,
