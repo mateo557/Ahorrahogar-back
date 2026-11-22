@@ -13,6 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IMovemntsService, MovemntsService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<IBalanceService, BalanceService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -30,6 +31,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();
