@@ -18,12 +18,8 @@ public class MovemntsController : ControllerBase
 
    
     [HttpGet]
-    public async Task<ActionResult<Response<IEnumerable<MovemntsDto>>>> GetAll()
-    {
-        var movimientos = await _service.GetAllAsync();
-
-        return Ok();
-    }
+    public async Task<ActionResult<IEnumerable<MovemntsDto>>> GetAll() =>
+            Ok(await _service.GetAllAsync());
 
 
 
@@ -39,7 +35,7 @@ public class MovemntsController : ControllerBase
     {
         await _service.CreateAsync(dto);
 
-        return StatusCode(201,HttpMessages.Confirm);
+        return StatusCode(201, new { message = HttpMessages.Confirm });
     }
 
     [HttpPut("{id:int}")]

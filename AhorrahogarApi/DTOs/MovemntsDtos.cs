@@ -23,8 +23,8 @@ public class MovemntsDto
 
 public class CreateMovemntsDto
 {
-    public int HogarId { get; set; }
-    public int CategoriaId { get; set; }
+    public int hogar_id { get; set; }
+    public int categoria_id { get; set; }
 
     public decimal monto { get; set; }
 
