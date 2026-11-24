@@ -1,17 +1,18 @@
-﻿namespace AhorrahogarApi.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AhorrahogarApi.Models
 {
     public class Goals
     {
         public int Id { get; set; }
         public int Hogar_Id { get; set; }
-        public int Categoria_Id { get; set; }
         public string Nombre { get; set; }
+        [Column("montoobjetivo")]
+        public decimal montoobjetivo { get; set; }
+        [Column("fechalimite")]
+        public DateOnly fechalimite { get; set; }
 
-        public decimal Monto { get; set; }
-
-        public DateOnly Fecha { get; set; }
-
-
-        public DateTime Creado_En { get; set; }
+        [Column("creadoen")]
+        public DateTime creadoen { get; set; }
     }
 }
