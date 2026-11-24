@@ -12,8 +12,6 @@ namespace AhorrahogarApi.Models
         public string nombre { get; set; } = string.Empty;
 
         public DateTime Creado_En { get; set; }
-<<<<<<< Updated upstream
-=======
 
         public string? Email { get; set; }
 
@@ -23,6 +21,5 @@ namespace AhorrahogarApi.Models
 
         // "admin" (quien creó el hogar) o "miembro"
         public string Rol { get; set; } = "miembro";
->>>>>>> Stashed changes
     }
 }
