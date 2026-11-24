@@ -1,39 +1,68 @@
 using AhorrahogarApi.Constants;
 using AhorrahogarApi.DTOs;
-using AhorrahogarApi.Services;
 using AhorrahogarApi.Models;
+using AhorrahogarApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Google.Protobuf.WellKnownTypes;
 
 namespace AhorrahogarApi.Controllers;
 
+// Requiere sesión. El hogar sale de quien inició sesión, no de lo que mande la app.
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class MovemntsController : ControllerBase
 {
     private readonly IMovemntsService _service;
+    private readonly IUsuarioActual _usuario;
 
-    public MovemntsController(IMovemntsService service) => _service = service;
+    public MovemntsController(IMovemntsService service, IUsuarioActual usuario)
+    {
+        _service = service;
+        _usuario = usuario;
+    }
 
-   
+    private ObjectResult SinHogar() => StatusCode(403, "Primero únete a un hogar.");
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MovemntsDto>>> GetAll() =>
-            Ok(await _service.GetAllAsync());
+    public async Task<ActionResult<IEnumerable<MovemntsDto>>> Get([FromQuery] int? anio, [FromQuery] int? mes)
+    {
+        if (anio.HasValue != mes.HasValue)
+            return BadRequest("Envía anio y mes juntos");
 
+        if (mes < 1 || mes > 12 || anio < 1)
+            return BadRequest("anio o mes fuera de rango");
 
+        var hogarId = await _usuario.HogarIdAsync();
+        if (hogarId is null) return SinHogar();
+
+        return Ok(await _service.GetAllAsync(hogarId.Value, anio, mes));
+    }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<MovemntsDto>> GetById(int id)
     {
-        var product = await _service.GetByIdAsync(id);
-        return product is null ? NotFound(HttpMessages.NotFound) : Ok();
+        var hogarId = await _usuario.HogarIdAsync();
+        if (hogarId is null) return SinHogar();
+
+        var mov = await _service.GetByIdAsync(id, hogarId.Value);
+        return mov is null ? NotFound(HttpMessages.NotFound) : Ok(mov);
     }
 
     [HttpPost]
     public async Task<ActionResult<Response<object>>> Create(CreateMovemntsDto dto)
     {
-        await _service.CreateAsync(dto);
+        var hogarId = await _usuario.HogarIdAsync();
+        if (hogarId is null) return SinHogar();
+
+        try
+        {
+            await _service.CreateAsync(hogarId.Value, dto);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return BadRequest(e.Message);
+        }
 
         return StatusCode(201, new { message = HttpMessages.Confirm });
     }
@@ -41,21 +70,27 @@ public class MovemntsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<Response<object>>> Update(int id, UpdateMovemntsDto dto)
     {
-        var updated = await _service.UpdateAsync(id, dto);
+        var hogarId = await _usuario.HogarIdAsync();
+        if (hogarId is null) return SinHogar();
 
-        return updated
-            ? Ok(HttpMessages.Confirm)
-            : NotFound(HttpMessages.NotFound);
+        try
+        {
+            var updated = await _service.UpdateAsync(id, hogarId.Value, dto);
+            return updated ? Ok(HttpMessages.Confirm) : NotFound(HttpMessages.NotFound);
+        }
+        catch (KeyNotFoundException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Response<object>>> Delete(int id)
     {
-        var delete = await _service.DeleteAsync(id);
-        return delete
-             ? Ok(HttpMessages.Confirm)
-            : NotFound(HttpMessages.NotFound);
+        var hogarId = await _usuario.HogarIdAsync();
+        if (hogarId is null) return SinHogar();
 
+        var delete = await _service.DeleteAsync(id, hogarId.Value);
+        return delete ? Ok(HttpMessages.Confirm) : NotFound(HttpMessages.NotFound);
     }
-       
 }

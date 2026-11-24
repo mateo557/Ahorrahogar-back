@@ -2,7 +2,6 @@ using AhorrahogarApi.Data;
 using AhorrahogarApi.DTOs;
 using AhorrahogarApi.Models;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AhorrahogarApi.Services;
 
@@ -12,121 +11,120 @@ public class MovemntsService : IMovemntsService
 
     public MovemntsService(AppDbContext context) => _context = context;
 
-    public async Task<IEnumerable<MovemntsDto>> GetAllAsync()
+    public async Task<IEnumerable<MovemntsDto>> GetAllAsync(int hogarId, int? anio = null, int? mes = null)
     {
-        var products = await _context.movimientos.AsNoTracking().ToListAsync();
-        return products.Select(ToDto);
-    }
-    
-    public async Task<MovemntsDto?> GetByIdAsync(int id)
-    {
-        var product = await _context.movimientos.FindAsync(id);
-        return product is null ? null : ToDto(product);
+        var query = _context.movimientos.AsNoTracking().Where(m => m.hogar_id == hogarId);
+
+        if (anio.HasValue && mes.HasValue)
+        {
+            var desde = new DateOnly(anio.Value, mes.Value, 1);
+            var hasta = desde.AddMonths(1);
+
+            query = query.Where(m => m.Fecha >= desde && m.Fecha < hasta);
+        }
+
+        var movimientos = await query.OrderByDescending(m => m.Fecha).ToListAsync();
+        return movimientos.Select(ToDto);
     }
 
-    public async Task<MovemntsDto> CreateAsync(CreateMovemntsDto dto)
+    public async Task<MovemntsDto?> GetByIdAsync(int id, int hogarId)
     {
-        // DTO -> entidad
-        
+        var mov = await _context.movimientos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == id && m.hogar_id == hogarId);
+        return mov is null ? null : ToDto(mov);
+    }
+
+    public async Task<MovemntsDto> CreateAsync(int hogarId, CreateMovemntsDto dto)
+    {
+        var categoria = await _context.categorias.FindAsync(dto.categoria_id)
+            ?? throw new KeyNotFoundException("Categoría no existe");
+
         var product = new Movemnts
         {
-            hogar_id = dto.hogar_id,
+            hogar_id = hogarId, // el hogar lo pone el servidor, no la app
             categoria_id = dto.categoria_id,
-            monto=dto.monto,
+            tipo = categoria.Tipo,
+            monto = dto.monto,
             Fecha = dto.Fecha,
             Nota = dto.Nota,
             Creado_En = DateTime.Now
         };
 
         _context.movimientos.Add(product);
-        var category = await _context.categorias.FindAsync(dto.categoria_id);
-        bool Type = category.Tipo.ToLower() == "ingreso";
-        
 
-        var balanceRecord = await _context.balances.FindAsync(dto.hogar_id);
-
-        if (Type)
-        {
-            balanceRecord.balance_ingreso += dto.monto;
-            balanceRecord.balance += dto.monto;
-        }
-        else
-        {
-            balanceRecord.balance_gasto -= dto.monto;
-            balanceRecord.balance -= dto.monto;
-        }
+        await ApplyToBalanceAsync(product.hogar_id, product.Fecha, categoria.Tipo, product.monto);
 
         await _context.SaveChangesAsync();
 
         return ToDto(product);
     }
 
-    public async Task<bool> UpdateAsync(int id, UpdateMovemntsDto dto)
+    public async Task<bool> UpdateAsync(int id, int hogarId, UpdateMovemntsDto dto)
     {
-        var movimiento = await _context.movimientos.FindAsync(id);
-        if (movimiento is null) return false;
+        var mov = await _context.movimientos.FirstOrDefaultAsync(m => m.Id == id && m.hogar_id == hogarId);
+        if (mov is null) return false;
 
-        var oldCategory = await _context.categorias.FindAsync(movimiento.categoria_id);
-        var oldingreso = await _context.balances.FindAsync(movimiento.hogar_id);
-        var newingreso = await _context.balances.FindAsync(dto.hogar_id);
-        var oldgasto = await _context.balances.FindAsync(movimiento.hogar_id);
-        var newgasto = await _context.balances.FindAsync(dto.hogar_id);
-        var newCategory = await _context.categorias.FindAsync(dto.categoria_id);
-        var oldBalance = await _context.balances.FindAsync(movimiento.hogar_id);
-        var newBalance = await _context.balances.FindAsync(dto.hogar_id);
+        // Se valida la categoría ANTES de tocar el balance; si no existe, el balance no queda a medias
+        var categoria = await _context.categorias.FindAsync(dto.categoria_id)
+            ?? throw new KeyNotFoundException("Categoría no existe");
 
-        if (oldCategory is null || newCategory is null ||
-            oldBalance is null || newBalance is null || 
-            oldgasto is null || newgasto is null || 
-            newingreso is null || oldingreso is null) return false;
+        // 1. quita el efecto viejo (en su mes original)
+        await ApplyToBalanceAsync(mov.hogar_id, mov.Fecha, mov.tipo, -mov.monto);
 
-        // 1. Revertir el movimiento viejo
-        if (oldCategory.Tipo.ToLower() == "ingreso")
-            oldBalance.balance -= movimiento.monto;
-        else
-            oldBalance.balance += movimiento.monto;
+        // 2. aplica los datos nuevos
+        mov.categoria_id = dto.categoria_id;
+        mov.tipo = categoria.Tipo;
+        mov.monto = dto.monto;
+        mov.Fecha = dto.Fecha;
+        mov.Nota = dto.Nota;
 
-        if (oldCategory.Tipo.ToLower() == "ingreso")
-            oldingreso.balance -= movimiento.monto;
-        else
-            oldgasto.balance += movimiento.monto;
-
-        // 2. Aplicar el movimiento nuevo
-        if (newCategory.Tipo.ToLower() == "ingreso")
-            newBalance.balance += dto.monto;
-        else
-            newBalance.balance -= dto.monto;
-
-        if (newCategory.Tipo.ToLower() == "ingreso")
-            newingreso.balance += dto.monto;
-        else
-            newgasto.balance -= dto.monto;
-
-        // 3. Actualizar los campos
-        movimiento.hogar_id = dto.hogar_id;
-        movimiento.categoria_id = dto.categoria_id;
-        movimiento.monto =dto.monto;
-        movimiento.Fecha = dto.Fecha;
-        movimiento.Nota = dto.Nota;
+        // 3. suma el efecto nuevo (puede ser otro mes u otra categoría)
+        await ApplyToBalanceAsync(mov.hogar_id, mov.Fecha, mov.tipo, mov.monto);
 
         await _context.SaveChangesAsync();
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int hogarId)
     {
-        var product = await _context.movimientos.FindAsync(id);
+        var product = await _context.movimientos.FirstOrDefaultAsync(m => m.Id == id && m.hogar_id == hogarId);
         if (product is null) return false;
 
+        await ApplyToBalanceAsync(product.hogar_id, product.Fecha, product.tipo, -product.monto); // revierte
         _context.movimientos.Remove(product);
+
         await _context.SaveChangesAsync();
         return true;
+    }
+
+
+    // monto positivo suma al balance, monto negativo lo revierte
+    private async Task ApplyToBalanceAsync(int hogarId, DateOnly fecha, string tipo, decimal monto)
+    {
+        var periodo = new DateOnly(fecha.Year, fecha.Month, 1);
+
+        var balance = await _context.balances
+            .FirstOrDefaultAsync(b => b.hogar_id == hogarId && b.periodo == periodo);
+
+        if (balance is null)
+        {
+            balance = new Balance { hogar_id = hogarId, periodo = periodo };
+            _context.balances.Add(balance);          // no existe ese mes: lo crea
+        }
+
+        if (tipo == "ingreso") balance.balance_ingreso += monto;
+        else balance.balance_gasto += monto;   // gasto en positivo
+
+        balance.balance = balance.balance_ingreso - balance.balance_gasto;
+
+        await _context.SaveChangesAsync();   // quítalo si quien llama ya guarda
     }
 
     // Entidad -> DTO (un solo lugar para no repetir codigo)
     private static MovemntsDto ToDto(Movemnts p) => new()
     {
-        Id=p.Id,
+        Id = p.Id,
         categoria_id = p.categoria_id,
         monto = p.monto,
         Fecha = p.Fecha,
