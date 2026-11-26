@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
     public DbSet<Movemnts> movimientos => Set<Movemnts>();
     public DbSet<Categorys> categorias => Set<Categorys>();
     public DbSet<Members> integrantes => Set<Members>();
+    public DbSet<Homes> hogares => Set<Homes>();
+    public DbSet<Solicitud> solicitudes_hogar => Set<Solicitud>();
     public DbSet<Goals> metas => Set<Goals>();
     public DbSet<Balance> balances => Set<Balance>();
 
