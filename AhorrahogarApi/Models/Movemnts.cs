@@ -10,6 +10,8 @@ public class Movemnts
     public int hogar_id { get; set; }
     public int categoria_id { get; set; }
 
+    public string tipo { get; set; } = string.Empty;
+
     public decimal monto { get; set; }
 
     public DateOnly Fecha { get; set; }
