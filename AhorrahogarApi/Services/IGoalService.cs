@@ -9,5 +9,8 @@ namespace AhorrahogarApi.Services
         Task<GoalsDto> CreateAsync(CreateGoalsDto dto);
         Task<bool> UpdateAsync(int id, UpdateGoalsDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<IEnumerable<GoalsDto>> GetAllAsync(int hogarId);
     }
+
+
 }
